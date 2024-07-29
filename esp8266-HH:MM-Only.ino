@@ -6,10 +6,10 @@
 #include <SPI.h>
 
 // NTP Client settings
-const char* ssid     = "Router";        // Zadajte názov vašej Wi-Fi siete
-const char* password = "password";    // Zadajte heslo k vašej Wi-Fi sieti
+const char* ssid     = "YourSSID";        // Zadajte názov vašej Wi-Fi siete
+const char* password = "YourPass";    // Zadajte heslo k vašej Wi-Fi sieti
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000);  // UTC+1 časová zóna, aktualizácia každú minútu
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600 * 2, 60000);  // UTC+1 časová zóna, aktualizácia každú minútu
 
 // LED matrix settings
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
