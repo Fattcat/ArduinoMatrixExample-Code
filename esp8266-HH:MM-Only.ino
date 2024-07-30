@@ -6,10 +6,10 @@
 #include <SPI.h>
 
 // NTP Client settings
-const char* ssid     = "YourSSID";        // Zadajte názov vašej Wi-Fi siete
-const char* password = "YourPass";    // Zadajte heslo k vašej Wi-Fi sieti
+const char* ssid     = "YourSSID"; 
+const char* password = "YourPass"; 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600 * 2, 60000);  // UTC+1 časová zóna, aktualizácia každú minútu
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600 * 2, 60000);  // UTC+1 časová zóna aktualizácia každú minútu
 
 // LED matrix settings
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
@@ -19,6 +19,10 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600 * 2, 60000);  // UTC+1 časov�
 #define CS_PIN    D8  // alebo zadajte príslušné piny
 
 MD_Parola display = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+
+bool colonVisible = true;  // Stav dvojbodky (viditeľná/neviditeľná)
+unsigned long previousMillis = 0; // Čas posledného preklopenia stavu dvojbodky
+const long interval = 1000; // Interval na preklopenie stavu dvojbodky (1 sekunda)
 
 void setup() {
   Serial.begin(115200);
@@ -43,14 +47,27 @@ void setup() {
 void loop() {
   timeClient.update();
 
-  // Get formatted time
+  // Získanie formátovaného času (HH:MM:SS)
   String formattedTime = timeClient.getFormattedTime();
 
-  // Extract hours and minutes
-  String hoursMinutes = formattedTime.substring(0, 5); // "HH:MM"
+  // Extrahovanie hodín a minút
+  String hours = formattedTime.substring(0, 2);
+  String minutes = formattedTime.substring(3, 5);
 
-  // Display time on LED matrix
-  display.print(hoursMinutes.c_str());
+  // Kontrola času a preklopenie stavu dvojbodky
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    colonVisible = !colonVisible;  // Zmena stavu dvojbodky
 
-  delay(1000);
+    // Zobrazenie času s alebo bez dvojbodky
+    String timeToDisplay = hours + (colonVisible ? ":" : " ") + minutes;
+
+    // Zobrazenie času na LED matrici
+    display.displayClear();
+    display.displayText(timeToDisplay.c_str(), PA_CENTER, 0, 0, PA_PRINT, PA_NO_EFFECT);
+
+    // Spustenie animácie
+    display.displayAnimate();
+  }
 }
