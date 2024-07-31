@@ -5,11 +5,9 @@
 #include <MD_MAX72XX.h>
 #include <SPI.h>
 
-// Buzzer Pin connect to esp8266 Pin D6
-
 // NTP Client settings
 const char* ssid     = "YourSSID"; 
-const char* password = "YourPass"; 
+const char* password = "YourPASS"; 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600 * 2, 60000);  // UTC+1 časová zóna aktualizácia každú minútu
 
@@ -30,6 +28,7 @@ unsigned long previousMillis = 0; // Čas posledného preklopenia stavu dvojbodk
 const long interval = 1000; // Interval na preklopenie stavu dvojbodky (1 sekunda)
 
 String previousHour = "";  // Premenná na uloženie predchádzajúcej hodiny
+bool buzzedAt550 = false;  // Indikátor, či už bzučiak bzučal o 5:50
 
 void setup() {
   Serial.begin(115200);
@@ -84,6 +83,7 @@ void loop() {
   // Kontrola zmeny hodiny, okrem časov 23:00 až 05:00
   if (previousHour != hours) {
     previousHour = hours;
+    buzzedAt550 = false;  // Reset indikátora po každej hodine
 
     int hourInt = hours.toInt();
     if (hourInt < 23 && hourInt >= 6) {
@@ -97,8 +97,9 @@ void loop() {
     }
   }
 
-  // Kontrola na čas 5:50
-  if (hours == "05" && minutes == "50") {
+  // Kontrola na čas 5:50 a zabezpečenie, že bzučiak zabzučí len raz
+  if (hours == "05" && minutes == "50" && !buzzedAt550) {
+    buzzedAt550 = true;  // Nastavenie indikátora, aby sa sekvencia nevykonala viackrát
     for (int i = 0; i < 10; i++) {
       digitalWrite(BUZZER_PIN, HIGH);
       delay(1000);  // Zapnutie bzučiaku na 1 sekundu
